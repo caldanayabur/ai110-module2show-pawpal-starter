@@ -130,4 +130,4 @@ pip install -r requirements.txt
 
 ## 📸 Demo
 
-<a href="/course_images/ai110/demo.png" target="_blank"><img src='/course_images/ai110/demo.png' width='100%'></a>
+<a href="demo.png" target="_blank"><img src='demo.png' width='100%'></a>
