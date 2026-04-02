@@ -58,7 +58,7 @@ classDiagram
 Yes, the design did change during implementation.
 
 - If yes, describe at least one change and why you made it.
-I asked Copilot if it noticed any missing relationships or potential logic bottenecks, and told me four issues it noticed. The first one is that Scheduler should derive its task list from owner. tasks rather than maintaining a separate one. The second one is that Task is not linked to Pet, which means the scheduler can't reason about which pet a task belong to, so an attribute is needed. The third one is that right now priority is a string, so any string is valid, so I need to flag invalid values as an error. The fourth one is that is not clear what the method get_available_time() returns, so I need to clarify that it returns the time avaiable by the owner minus the tasks durations. The fifth one is that the method generate_schedule() returned a list but it wasn't saving it anywhere, and lastely, the method explain_schedule() needs to describe that schedule but it has no way to access it.
+I asked Copilot if it noticed any missing relationships or potential logic bottenecks, and told me four issues it noticed. The first one is that Scheduler should derive its task list from owner. tasks rather than maintaining a separate one. The second one is that Task is not linked to Pet, which means the scheduler can't reason about which pet a task belong to, so an attribute is needed. The third one is that right now priority is a string, so any string is valid, so I need to flag invalid values as an error. The fourth one is that is not clear what the method get_available_time() returns, so I need to clarify that it returns the time avaiable by the owner minus the tasks durations. The fifth one is that the method generate_schedule() returned a list but it wasn't saving it anywhere, and lastly, the method explain_schedule() needs to describe that schedule but it has no way to access it.
 ---
 
 ## 2. Scheduling Logic and Tradeoffs
@@ -66,12 +66,18 @@ I asked Copilot if it noticed any missing relationships or potential logic botte
 **a. Constraints and priorities**
 
 - What constraints does your scheduler consider (for example: time, priority, preferences)?
+The scheduler considers two main constraints: the owner's available time for the day (in minutes) and the priority level of each task (high, medium, or low). It also checks for time conflicts.
+
 - How did you decide which constraints mattered most?
+I prioritized high-priority tasks like feeding or walking your pets. Available time came second since it's a real limit (you can't fit 4 hours of work into 2 hours). Conflict detection was added mainly as a warning to alert the user, not as a hard rule, since sometimes tasks can overlap in practice.
 
 **b. Tradeoffs**
 
 - Describe one tradeoff your scheduler makes.
+The scheduler picks tasks in priority order and skips any task that doesn't fit the remaining time, without going back to try smaller tasks that might still fit.
+
 - Why is that tradeoff reasonable for this scenario?
+I tradeoff I am doing is that rather than storing priority as a number (like 1, 2, 3), the system stores it as a word ("high", "medium", "low"). This is a tradeoff because it makes the system more user-friendly and easier to understand, but it also means that the system needs to validate the input to ensure that only valid priority levels are accepted, which adds some complexity to the implementation.
 
 ---
 
@@ -80,13 +86,19 @@ I asked Copilot if it noticed any missing relationships or potential logic botte
 **a. How you used AI**
 
 - How did you use AI tools during this project (for example: design brainstorming, debugging, refactoring)?
+I did the UML design and AI helped me discovered some issues with it. I also used AI to help me write thec code needed for the system skeleton, and to help me write the tests.
+
 - What kinds of prompts or questions were most helpful?
+I think the most helpful prompts were those that asked for feedback on my design, and those that asked for suggestions on how to implement certain methods or features.
 
 **b. Judgment and verification**
 
 - Describe one moment where you did not accept an AI suggestion as-is.
-- How did you evaluate or verify what the AI suggested?
 
+When I asked AI about optimizing my code it suggested a way to optimize the code that I thought was too complex for me to understand, so I preferred to keep it more simple.
+
+- How did you evaluate or verify what the AI suggested?
+I evaluated the AI suggestion by considering how the system is supposed to work.
 ---
 
 ## 4. Testing and Verification
@@ -94,11 +106,15 @@ I asked Copilot if it noticed any missing relationships or potential logic botte
 **a. What you tested**
 
 - What behaviors did you test?
+
+
 - Why were these tests important?
 
 **b. Confidence**
 
 - How confident are you that your scheduler works correctly?
+
+
 - What edge cases would you test next if you had more time?
 
 ---
