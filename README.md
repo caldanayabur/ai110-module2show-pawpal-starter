@@ -54,6 +54,32 @@ combination — without touching the underlying data.
 
 ---
 
+## Features
+
+### Priority-Based Schedule Generation
+The `Scheduler.generate_schedule()` method uses a **greedy priority-first algorithm** to build a daily schedule. It collects all incomplete tasks across every pet, sorts them by priority (`high → medium → low`) using a numeric weight map, then iterates through the sorted list and adds each task only if its duration fits within the owner's remaining time budget. Tasks that exceed the remaining time are skipped entirely — no splitting or rescheduling occurs. Time complexity: O(n log n).
+
+### Chronological Task Sorting
+`Scheduler.sort_by_time()` returns all tasks across all pets sorted in ascending order by their scheduled time. Tasks store time as `"HH:MM"` 24-hour strings, which compare correctly with Python's built-in lexicographic sort — no datetime parsing is required. Time complexity: O(n log n).
+
+### Multi-Criteria Task Filtering
+`Scheduler.filter_tasks()` supports up to two independent filters applied in sequence:
+1. **Completion filter** — keep only completed or only pending tasks (or neither).
+2. **Pet filter** — restrict results to a specific pet by name (case-insensitive match).
+
+Either, both, or neither filter may be active in a single call, making the method composable for any view the UI needs.
+
+### Scheduling Conflict Detection
+`Scheduler.detect_conflicts()` finds time-slot collisions across all pets. It builds a `defaultdict` mapping each `"HH:MM"` time slot to the tasks assigned there, then iterates in chronological order and flags any slot with two or more tasks as a conflict. Each warning names every overlapping task and its pet. Returns an empty list when no conflicts exist. Time complexity: O(n log n).
+
+### Automatic Task Recurrence
+`Scheduler.mark_task_complete()` marks a task done and automatically schedules its next occurrence for recurring tasks. Internally it calls `Task.create_next_occurrence()`, which uses `timedelta` to compute the next due date — `+1 day` for daily tasks, `+1 week` for weekly tasks. The new task is appended directly to the owning pet's task list and returned. Monthly tasks (and any unknown frequency) return `None` — no next occurrence is created.
+
+### Time-Budget Tracking
+`Owner.get_available_time()` computes remaining daily time by summing the duration of all incomplete tasks across all pets and subtracting from the owner's declared available minutes. This gives the Scheduler a live budget it can check before adding each task during schedule generation.
+
+---
+
 ## Testing PawPal+
 
 ### Run the tests
@@ -99,3 +125,9 @@ pip install -r requirements.txt
 5. Add tests to verify key behaviors.
 6. Connect your logic to the Streamlit UI in `app.py`.
 7. Refine UML so it matches what you actually built.
+
+---
+
+## 📸 Demo
+
+<a href="/course_images/ai110/demo.png" target="_blank"><img src='/course_images/ai110/demo.png' width='100%'></a>

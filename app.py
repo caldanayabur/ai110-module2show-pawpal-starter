@@ -89,15 +89,72 @@ if st.button("Generate schedule"):
         scheduler = Scheduler(owner)
         scheduled = scheduler.generate_schedule()
 
-        st.success(f"Schedule generated for **{owner_name}** and **{pet_name}**!")
-        st.markdown(f"**Available time:** {available_time} min")
-        st.markdown(f"**Tasks scheduled:** {len(scheduled)} / {len(st.session_state.tasks)}")
+        # ── Conflict warnings (shown first so the owner sees them immediately) ──
+        conflicts = scheduler.detect_conflicts()
+        if conflicts:
+            st.error("⚠️ Scheduling Conflicts Detected", icon="🚨")
+            for conflict in conflicts:
+                # Strip the "WARNING: " prefix since the UI already signals urgency
+                message = conflict.replace("WARNING: ", "")
+                st.warning(message)
+            st.markdown(
+                "**Tip:** Assign different times to conflicting tasks so your "
+                "pet's care routine runs smoothly."
+            )
+            st.divider()
 
-        st.text(scheduler.explain_schedule())
-
+        # ── Summary banner ──
+        total = len(st.session_state.tasks)
         skipped = [t for t in st.session_state.tasks if t not in scheduled]
+        if not skipped:
+            st.success(
+                f"All {total} tasks fit within {owner_name}'s {available_time}-minute day!"
+            )
+        else:
+            st.success(
+                f"Schedule generated for **{owner_name}** and **{pet_name}** — "
+                f"{len(scheduled)} of {total} tasks scheduled."
+            )
+
+        # ── Scheduled tasks table (sorted by priority via generate_schedule) ──
+        st.subheader("Today's Schedule")
+        priority_emoji = {"high": "🔴", "medium": "🟡", "low": "🟢"}
+        st.table(
+            [
+                {
+                    "Time": t.time,
+                    "Task": t.description,
+                    "Duration (min)": t.duration,
+                    "Priority": f"{priority_emoji.get(t.priority, '')} {t.priority}",
+                    "Frequency": t.frequency,
+                }
+                for t in scheduler.sort_by_time()
+                if t in scheduled
+            ]
+        )
+
+        # ── Skipped tasks ──
         if skipped:
             st.warning(
-                "The following tasks were skipped (not enough time): "
-                + ", ".join(t.description for t in skipped)
+                "**Not enough time for:** "
+                + ", ".join(f"*{t.description}*" for t in skipped)
+                + f"  \nConsider reducing task durations or increasing available time "
+                f"(currently {available_time} min)."
             )
+
+        # ── Pending (incomplete) tasks filtered view ──
+        pending = scheduler.filter_tasks(completed=False)
+        if pending:
+            with st.expander(f"View all pending tasks ({len(pending)})"):
+                st.table(
+                    [
+                        {
+                            "Task": t.description,
+                            "Pet": t.pet_name,
+                            "Duration (min)": t.duration,
+                            "Priority": f"{priority_emoji.get(t.priority, '')} {t.priority}",
+                            "Frequency": t.frequency,
+                        }
+                        for t in pending
+                    ]
+                )
