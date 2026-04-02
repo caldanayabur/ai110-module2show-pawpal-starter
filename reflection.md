@@ -98,6 +98,7 @@ I think the most helpful prompts were those that asked for feedback on my design
 When I asked AI about optimizing my code it suggested a way to optimize the code that I thought was too complex for me to understand, so I preferred to keep it more simple.
 
 - How did you evaluate or verify what the AI suggested?
+
 I evaluated the AI suggestion by considering how the system is supposed to work.
 ---
 
@@ -107,15 +108,21 @@ I evaluated the AI suggestion by considering how the system is supposed to work.
 
 - What behaviors did you test?
 
+I tested things like marking a task as complete, adding a task to a pet, sorting tasks by time, checking that a daily task creates a new one for the next day, and making sure the conflict detection catches two tasks at the same time.
 
 - Why were these tests important?
+
+Because those are the main things the app is supposed to do. If marking a task complete or detecting a conflict didn't work, the whole schedule would be unreliable.
 
 **b. Confidence**
 
 - How confident are you that your scheduler works correctly?
 
+I am confident for the tests that AI helped me write because they all passed.
 
 - What edge cases would you test next if you had more time?
+
+What happens if the owner has zero available time, What if two pets have tasks at the exact same time, and what if you try to filter by a pet name that doesn't exist.
 
 ---
 
@@ -125,10 +132,17 @@ I evaluated the AI suggestion by considering how the system is supposed to work.
 
 - What part of this project are you most satisfied with?
 
+I'm most happy with how smooth the owner and pet information is collected and also how easy it is to add tasks.
+
+
 **b. What you would improve**
 
 - If you had another iteration, what would you improve or redesign?
 
+The UI, I would like to make it more visually appealing, also adding an option to add the pet's picture, and maybe adding some more features like a calendar view of the schedule. Also I am missing a button to mark a task as complete in the UI.
+
 **c. Key takeaway**
 
 - What is one important thing you learned about designing systems or working with AI on this project?
+
+I liked using AI to create a classes skeleton and asking it for help with the UML design, I liked that it gave me feedback that improved the logic of it.
