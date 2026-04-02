@@ -1,4 +1,5 @@
 from dataclasses import dataclass, field
+from datetime import date, timedelta
 from typing import Literal
 
 
@@ -8,7 +9,10 @@ class Task:
     duration: int                               # in minutes
     priority: Literal["high", "medium", "low"]
     frequency: str                              # e.g. "daily", "weekly"
+    time: str = "00:00"                         # scheduled time, "HH:MM" (24-hour)
+    pet_name: str = ""                          # name of the pet this task belongs to
     completed: bool = False
+    due_date: date = field(default_factory=date.today)
 
     def is_high_priority(self) -> bool:
         """Return True if the task's priority is 'high'."""
@@ -18,6 +22,32 @@ class Task:
         """Mark the task as completed by setting completed to True."""
         self.completed = True
 
+    def create_next_occurrence(self) -> "Task | None":
+        """Return a fresh, incomplete copy of this task due at the next occurrence.
+
+        Uses timedelta to calculate the next due_date:
+          - "daily"  → due_date + timedelta(days=1)
+          - "weekly" → due_date + timedelta(weeks=1)
+        Returns None for any other frequency (e.g. "monthly").
+        """
+        if self.frequency == "daily":
+            next_due = self.due_date + timedelta(days=1)
+        elif self.frequency == "weekly":
+            next_due = self.due_date + timedelta(weeks=1)
+        else:
+            return None
+
+        return Task(
+            description=self.description,
+            duration=self.duration,
+            priority=self.priority,
+            frequency=self.frequency,
+            time=self.time,
+            pet_name=self.pet_name,
+            completed=False,
+            due_date=next_due,
+        )
+
 
 @dataclass
 class Pet:
@@ -26,7 +56,8 @@ class Pet:
     tasks: list[Task] = field(default_factory=list)
 
     def add_task(self, task: Task) -> None:
-        """Append a Task to this pet's task list."""
+        """Append a Task to this pet's task list, tagging it with this pet's name."""
+        task.pet_name = self.name
         self.tasks.append(task)
 
     def get_tasks(self) -> list[Task]:
@@ -52,8 +83,8 @@ class Owner:
         return all_tasks
 
     def get_available_time(self) -> int:
-        """Return remaining minutes after accounting for all scheduled tasks."""
-        used = sum(task.duration for task in self.get_all_tasks())
+        """Return remaining minutes after accounting for scheduled (incomplete) tasks."""
+        used = sum(task.duration for task in self.get_all_tasks() if not task.completed)
         return self.available_time - used
 
 
@@ -62,11 +93,36 @@ class Scheduler:
         self.owner: Owner = owner
         self.schedule: list[Task] = []
 
+    def mark_task_complete(self, task: Task) -> "Task | None":
+        """Mark *task* complete and, if it is daily/weekly, auto-schedule the next occurrence.
+
+        Finds the Pet that owns the task, marks it done, then calls
+        create_next_occurrence().  If a next occurrence is produced it is
+        appended to the same pet's task list and returned; otherwise None is
+        returned.
+        """
+        task.mark_complete()
+
+        next_task = task.create_next_occurrence()
+        if next_task is None:
+            return None
+
+        # Find the pet that owns this task and add the new occurrence to it.
+        for pet in self.owner.pets:
+            if pet.name == task.pet_name:
+                pet.add_task(next_task)
+                break
+
+        return next_task
+
     def generate_schedule(self) -> list[Task]:
         """Build and store a schedule from the owner's tasks within available time."""
         all_tasks = self.owner.get_all_tasks()
         priority_order = {"high": 0, "medium": 1, "low": 2}
-        sorted_tasks = sorted(all_tasks, key=lambda t: priority_order[t.priority])
+        sorted_tasks = sorted(
+            (t for t in all_tasks if not t.completed),
+            key=lambda t: priority_order[t.priority],
+        )
 
         self.schedule = []
         time_remaining = self.owner.available_time
@@ -75,6 +131,29 @@ class Scheduler:
                 self.schedule.append(task)
                 time_remaining -= task.duration
         return self.schedule
+
+    def sort_by_time(self) -> list[Task]:
+        """Return all owner tasks sorted ascending by their time attribute (HH:MM)."""
+        all_tasks = self.owner.get_all_tasks()
+        return sorted(all_tasks, key=lambda t: t.time)
+
+    def filter_tasks(
+        self,
+        completed: bool | None = None,
+        pet_name: str | None = None,
+    ) -> list[Task]:
+        """Return tasks filtered by completion status and/or pet name.
+
+        Pass ``completed=True`` for finished tasks, ``completed=False`` for
+        pending tasks, or omit it to skip that filter.  Pass ``pet_name`` to
+        restrict results to a specific pet; omit to include all pets.
+        """
+        tasks = self.owner.get_all_tasks()
+        if completed is not None:
+            tasks = [t for t in tasks if t.completed == completed]
+        if pet_name is not None:
+            tasks = [t for t in tasks if t.pet_name.lower() == pet_name.lower()]
+        return tasks
 
     def explain_schedule(self) -> str:
         """Return a human-readable explanation of self.schedule."""
