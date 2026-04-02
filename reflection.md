@@ -12,39 +12,43 @@ The main classes I can think of are: 'Owner', 'Pet', 'Tasks', 'Scheduler'. The a
 
 ```mermaid
 classDiagram
-    class Owner {
-        +String name
-        +int available_time
-        +list~Pet~ pets
-        +list~Task~ tasks
-        +add_pet(pet: Pet)
-        +add_task(task: Task)
-        +get_available_time() int
+    class Task {
+        +String description
+        +int duration
+        +String priority
+        +String frequency
+        +bool completed
+        +is_high_priority() bool
+        +mark_complete() None
     }
 
     class Pet {
         +String name
         +String species
+        +list~Task~ tasks
+        +add_task(task: Task) None
+        +get_tasks() list~Task~
     }
 
-    class Task {
-        +String description
-        +int duration
-        +String priority
-        +is_high_priority() bool
+    class Owner {
+        +String name
+        +int available_time
+        +list~Pet~ pets
+        +add_pet(pet: Pet) None
+        +get_all_tasks() list~Task~
+        +get_available_time() int
     }
 
     class Scheduler {
         +Owner owner
-        +list~Task~ tasks
+        +list~Task~ schedule
         +generate_schedule() list~Task~
         +explain_schedule() String
     }
 
+    Pet "1" --> "0..*" Task : has
     Owner "1" --> "1..*" Pet : owns
-    Owner "1" --> "0..*" Task : manages
     Scheduler "1" --> "1" Owner : schedules for
-    Scheduler "1" --> "0..*" Task : uses
 ```
 
 
