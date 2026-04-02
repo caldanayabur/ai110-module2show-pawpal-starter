@@ -5,7 +5,48 @@
 **a. Initial design**
 
 - Briefly describe your initial UML design.
+The initial UML design should let the user enter information about them and their pet, then add tasks with durations and priorities, and finally generate a daily schedule based on that information, which also should be able to explain the reasoning behind the schedule.
+
 - What classes did you include, and what responsibilities did you assign to each?
+The main classes I can think of are: 'Owner', 'Pet', 'Tasks', 'Scheduler'. The attributes of 'Owner' might include name,available time, pets, and tasks; the methods could include adding pets and tasks, and retrieving available time. For 'Pet', attributes could include 'name', and 'species'. For 'Task', attributes could include 'description', 'duration', and 'priority', and the methods could include checking if it's high priority. For 'Scheduler', it should have as attributes 'owner' and 'tasks'; it should include a method to generate a schedule based on the tasks and time constraints of the owner, and a method to explain the reasoning behind the schedule.
+
+```mermaid
+classDiagram
+    class Owner {
+        +String name
+        +int available_time
+        +list~Pet~ pets
+        +list~Task~ tasks
+        +add_pet(pet: Pet)
+        +add_task(task: Task)
+        +get_available_time() int
+    }
+
+    class Pet {
+        +String name
+        +String species
+    }
+
+    class Task {
+        +String description
+        +int duration
+        +String priority
+        +is_high_priority() bool
+    }
+
+    class Scheduler {
+        +Owner owner
+        +list~Task~ tasks
+        +generate_schedule() list~Task~
+        +explain_schedule() String
+    }
+
+    Owner "1" --> "1..*" Pet : owns
+    Owner "1" --> "0..*" Task : manages
+    Scheduler "1" --> "1" Owner : schedules for
+    Scheduler "1" --> "0..*" Task : uses
+```
+
 
 **b. Design changes**
 
