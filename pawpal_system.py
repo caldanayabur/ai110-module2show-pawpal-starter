@@ -155,6 +155,31 @@ class Scheduler:
             tasks = [t for t in tasks if t.pet_name.lower() == pet_name.lower()]
         return tasks
 
+    def detect_conflicts(self) -> list[str]:
+        """Return warning messages for tasks scheduled at the same time.
+
+        Groups all owner tasks by their ``time`` attribute.  Any slot that
+        contains more than one task is a conflict.  Returns a list of human-
+        readable warning strings (one per conflicting time slot) so the caller
+        can decide how to display them — the program never crashes.
+        """
+        from collections import defaultdict
+
+        by_time: dict[str, list[Task]] = defaultdict(list)
+        for task in self.owner.get_all_tasks():
+            by_time[task.time].append(task)
+
+        warnings: list[str] = []
+        for time_slot, tasks in sorted(by_time.items()):
+            if len(tasks) > 1:
+                names = ", ".join(
+                    f"'{t.description}' ({t.pet_name})" for t in tasks
+                )
+                warnings.append(
+                    f"WARNING: Conflict at {time_slot} — {names} overlap."
+                )
+        return warnings
+
     def explain_schedule(self) -> str:
         """Return a human-readable explanation of self.schedule."""
         if not self.schedule:

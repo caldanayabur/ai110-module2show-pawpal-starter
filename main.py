@@ -15,6 +15,9 @@ whiskers.add_task(Task(description="Clean litter box", duration=10, priority="hi
 buddy.add_task(   Task(description="Morning walk",     duration=30, priority="high",   frequency="daily",   time="07:00"))
 whiskers.add_task(Task(description="Vet check-up",     duration=60, priority="low",    frequency="monthly", time="11:00"))
 buddy.add_task(   Task(description="Brush coat",       duration=15, priority="medium", frequency="weekly",  time="09:30"))
+# ── Intentional conflicts for Step 4 demo ───────────────────────────────────
+buddy.add_task(   Task(description="Nail trim",        duration=15, priority="medium", frequency="weekly",  time="09:30"))  # conflicts with Brush coat
+whiskers.add_task(Task(description="Flea treatment",   duration=10, priority="high",   frequency="monthly", time="15:00"))  # conflicts with Playtime
 
 # Mark a couple of tasks complete to demo the filter
 buddy.get_tasks()[2].mark_complete()      # Feed breakfast -> done (direct, no scheduler yet)
@@ -78,6 +81,18 @@ print("=" * 45)
 for task in scheduler.filter_tasks(completed=False, pet_name="Whiskers"):
     print(f"  {task.description} @ {task.time}")
 
+print("=" * 45)
+
+# ── detect_conflicts() — Step 4 ──────────────────────────────────────────────
+print("\n" + "=" * 45)
+print("       Conflict Detection")
+print("=" * 45)
+conflicts = scheduler.detect_conflicts()
+if conflicts:
+    for warning in conflicts:
+        print(f"  {warning}")
+else:
+    print("  No scheduling conflicts found.")
 print("=" * 45)
 
 # ── mark_task_complete() — auto-recurring demo ───────────────────────────────
