@@ -54,6 +54,32 @@ combination — without touching the underlying data.
 
 ---
 
+## Testing PawPal+
+
+### Run the tests
+
+```bash
+python -m pytest tests/test_pawpal.py -v
+```
+
+### What the tests cover
+
+| Test | Description |
+|---|---|
+| `test_mark_complete_changes_status` | Verifies that calling `mark_complete()` on a task flips its `completed` flag from `False` to `True`. |
+| `test_add_task_increases_pet_task_count` | Confirms that `Pet.add_task()` appends to the pet's task list correctly. |
+| `test_sort_by_time_returns_chronological_order` | Ensures `Scheduler.sort_by_time()` returns tasks ordered earliest to latest by their `"HH:MM"` time string. |
+| `test_mark_complete_daily_creates_next_day_task` | Confirms that completing a `"daily"` task auto-generates a new, incomplete copy due the following day. |
+| `test_detect_conflicts_flags_duplicate_times` | Verifies that `Scheduler.detect_conflicts()` produces exactly one warning when two tasks share the same time slot, and none for unique slots. |
+
+### Confidence Level
+
+**4 / 5 stars**
+
+The core scheduling behaviors — task completion, recurrence, chronological sorting, and conflict detection — are all covered and passing. The remaining gap is integration-level coverage (e.g. the Streamlit UI layer and edge cases like monthly recurrence or an empty schedule), which would round out a full 5-star confidence rating.
+
+---
+
 ## Getting started
 
 ### Setup
