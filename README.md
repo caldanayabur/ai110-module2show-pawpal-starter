@@ -22,6 +22,38 @@ Your final app should:
 - Display the plan clearly (and ideally explain the reasoning)
 - Include tests for the most important scheduling behaviors
 
+## Smarter Scheduling
+
+PawPal+ goes beyond a simple to-do list with three algorithmic features built
+into the `Scheduler` class:
+
+### Priority-first schedule generation
+`generate_schedule()` uses a **greedy algorithm** to build today's plan.
+Incomplete tasks are sorted high → medium → low priority, then added to the
+schedule one by one as long as they fit inside the owner's available-time
+budget.  Higher-priority tasks are always considered first, so critical care
+(e.g. medication) is never bumped by optional grooming.
+
+### Chronological task sorting
+`sort_by_time()` returns every task in **ascending time order** (00:00 → 23:59).
+Because tasks store their time as a zero-padded `"HH:MM"` string, plain
+lexicographic comparison produces the correct chronological order without
+any datetime parsing overhead.
+
+### Conflict detection
+`detect_conflicts()` scans all scheduled tasks and flags any **time-slot
+collisions** — two or more tasks assigned to the exact same `"HH:MM"` slot.
+It returns a plain-English warning for each conflict (e.g.
+`WARNING: Conflict at 08:00 — 'Morning Walk' (Max), 'Medication' (Luna) overlap.`)
+so the UI can surface them to the owner before the day begins.
+
+### Flexible filtering
+`filter_tasks()` accepts optional `completed` and `pet_name` parameters,
+making it easy to show only pending tasks, tasks for a specific pet, or any
+combination — without touching the underlying data.
+
+---
+
 ## Getting started
 
 ### Setup

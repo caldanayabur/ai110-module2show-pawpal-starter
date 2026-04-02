@@ -116,7 +116,21 @@ class Scheduler:
         return next_task
 
     def generate_schedule(self) -> list[Task]:
-        """Build and store a schedule from the owner's tasks within available time."""
+        """Build and store a schedule using a greedy priority-first algorithm.
+
+        Algorithm:
+            1. Collect all incomplete tasks from every pet owned by the owner.
+            2. Sort them by priority: high (0) → medium (1) → low (2).
+            3. Greedily iterate through the sorted list and add each task to the
+               schedule only if its duration fits within the remaining available
+               time budget.  Tasks that do not fit are skipped entirely (no
+               splitting or rescheduling).
+            4. The resulting schedule is stored in ``self.schedule`` and returned.
+
+        Returns:
+            list[Task]: Tasks selected for today's schedule, ordered by priority.
+                        The list may be empty if no tasks fit the time budget.
+        """
         all_tasks = self.owner.get_all_tasks()
         priority_order = {"high": 0, "medium": 1, "low": 2}
         sorted_tasks = sorted(
@@ -133,7 +147,20 @@ class Scheduler:
         return self.schedule
 
     def sort_by_time(self) -> list[Task]:
-        """Return all owner tasks sorted ascending by their time attribute (HH:MM)."""
+        """Return all owner tasks sorted chronologically by their scheduled time.
+
+        Algorithm:
+            Retrieves all tasks across every pet and applies Python's built-in
+            ``sorted()`` using each task's ``time`` string (``"HH:MM"`` 24-hour
+            format) as the sort key.  Because ``"HH:MM"`` strings compare
+            lexicographically in the same order as their numeric values, no
+            datetime parsing is required — string comparison is both correct and
+            efficient (O(n log n)).
+
+        Returns:
+            list[Task]: All tasks in ascending chronological order (midnight first,
+                        23:59 last).  The original task list is not modified.
+        """
         all_tasks = self.owner.get_all_tasks()
         return sorted(all_tasks, key=lambda t: t.time)
 
@@ -144,9 +171,25 @@ class Scheduler:
     ) -> list[Task]:
         """Return tasks filtered by completion status and/or pet name.
 
-        Pass ``completed=True`` for finished tasks, ``completed=False`` for
-        pending tasks, or omit it to skip that filter.  Pass ``pet_name`` to
-        restrict results to a specific pet; omit to include all pets.
+        Algorithm:
+            Starts with the full flat task list from ``owner.get_all_tasks()``,
+            then applies up to two independent list-comprehension passes:
+
+            1. **Completion filter** (applied first if ``completed`` is not None):
+               keeps only tasks whose ``task.completed`` matches the given boolean.
+            2. **Pet filter** (applied second if ``pet_name`` is not None):
+               keeps only tasks whose ``task.pet_name`` matches case-insensitively.
+
+            Either, both, or neither filter may be active in a single call.
+
+        Args:
+            completed (bool | None): ``True`` → finished tasks only,
+                ``False`` → pending tasks only, ``None`` → no status filter.
+            pet_name (str | None): Restrict results to this pet's tasks
+                (case-insensitive match).  ``None`` includes all pets.
+
+        Returns:
+            list[Task]: Tasks that pass all active filters.  May be empty.
         """
         tasks = self.owner.get_all_tasks()
         if completed is not None:
@@ -156,12 +199,22 @@ class Scheduler:
         return tasks
 
     def detect_conflicts(self) -> list[str]:
-        """Return warning messages for tasks scheduled at the same time.
+        """Detect scheduling conflicts and return human-readable warning messages.
 
-        Groups all owner tasks by their ``time`` attribute.  Any slot that
-        contains more than one task is a conflict.  Returns a list of human-
-        readable warning strings (one per conflicting time slot) so the caller
-        can decide how to display them — the program never crashes.
+        Algorithm:
+            1. Build a ``defaultdict(list)`` that maps each ``"HH:MM"`` time slot
+               to every task scheduled at that time.
+            2. Iterate over the slots in sorted (chronological) order.
+            3. Any slot with two or more tasks is a conflict — generate one warning
+               string listing all conflicting task descriptions and their pet names.
+            4. Return the collected warnings; an empty list means no conflicts.
+
+            Time complexity: O(n log n) where n is the total number of tasks
+            (dominated by the sort over time slots).
+
+        Returns:
+            list[str]: One warning string per conflicting time slot, in
+                       chronological order.  Empty list if there are no conflicts.
         """
         from collections import defaultdict
 
